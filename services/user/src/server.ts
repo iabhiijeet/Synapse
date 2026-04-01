@@ -10,7 +10,7 @@ connectDB();
 
 app.use('/api/v1/users', userRoutes);
 
-const port = process.env.PORT;
-app.listen(port,()=>{
-    console.log(`User service is running on port ${port}`);
+const PORT = process.env.PORT;
+app.listen(PORT,()=>{
+    console.log(`User service is running on port ${PORT}`);
 })
