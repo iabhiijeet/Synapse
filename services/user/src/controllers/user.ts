@@ -1,9 +1,10 @@
 import  type { Request, Response } from "express";
 import User from '../model/User.js'
+import { v2 as cloudinary } from 'cloudinary';
 import jwt from 'jsonwebtoken'
 import TryCatch from "../utils/tryCatch.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
-
+import getBuffer from "../utils/dataUri.js";
 export const loginUser = async (req:Request, res:Response)=>{
   try {
     const {email,name, image} = req.body;
@@ -50,3 +51,17 @@ export const updateUserProfile = TryCatch(async(req:AuthenticatedRequest,res:Res
 }
 )
 
+export const updateProfilePicture = TryCatch(async(req:AuthenticatedRequest,res:Response)=>{
+  const file = req.file;
+  if(!file){
+    return res.status(400).json("No file uploaded");
+  }
+  const fileBuffer = getBuffer(file);
+  const cloud = await cloudinary.uploader.upload(fileBuffer.content as string, {folder:"blogs"})
+
+  const user = await User.findByIdAndUpdate(req.user?._id,{
+    image:cloud.secure_url
+  },{new:true});
+  const token = jwt.sign({user},process.env.JWT_SECRET as string, {expiresIn:"7d"});
+  res.status(200).json({message: "Profile picture updated!", user,token})
+})
